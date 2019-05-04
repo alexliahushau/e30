@@ -10,15 +10,15 @@ class KBusService {
 
 private:
 
-  const byte tempRequest[9] =  {18, 9, 6, 0, 0,  0, 215, 2, 200};
+  const byte tempRequest[9] =  {18, 9, 6, 0, 0, 0, 215, 2, 200};
   const byte speedRequest[9] = {18, 9, 6, 0, 0, 24, 227, 2, 228};
 
-  SoftwareSerialParity &bus;  
-  BusResponse getData(byte &request);
+  SoftwareSerialParity* bus = new SoftwareSerialParity(2, 4);  
+  BusResponse getData(byte request[]);
 
 public:
 
-  KBusService(uint8_t receivePin, uint8_t transmitPin);
+  KBusService();
   BusResponse getEngineTemp();
   BusResponse getCarSpeed();
 

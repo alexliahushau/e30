@@ -12,10 +12,10 @@ byte t_high = 98;
 byte fan_load = 0;
 float duty = 0;
 
-KBusService kbus (2, 4);
+KBusService kbus;
 
 void setup () {
-  if (PROFILE == "qa") Serial.begin(9600);
+  if (PROFILE == "qa") Serial.begin(115200);
   pinMode (FAN_FREQ_OUTPUT, OUTPUT) ;
   
   TCCR1A = 0xE2 ;    // pins 9 and 10 in antiphase, mode 14 = fast 16 bit
@@ -30,9 +30,7 @@ void loop () {
   getSpeedData();
   fanController();
   
-  if (PROFILE == "prod") {
-    delay(1000); 
-  }
+  delay(1000);
 }
 
 void fanController() {
@@ -61,7 +59,6 @@ void getTempData() {
 
   if (resp.status == 0) {
     temp = resp.data;
-    debug();
     return;
   }
 
@@ -73,11 +70,10 @@ void getSpeedData() {
 
   if (resp.status == 0) {
     speed = resp.data;
-    debug();
     return;
   }
 
-  temp = 0;
+  speed = 0;
 }
 
 void setFanLoad() {
