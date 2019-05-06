@@ -12,40 +12,38 @@ BusResponse KBusService::getData(byte request[]) {
   
   bus -> write(request, request[1]);
 
-  byte responseBytes[] = {};
-  byte checkSum = 0;
   uint8_t expectedInputSize = request[2];
+  byte responseBytes[expectedInputSize] = {};
+  byte checkSum = 0;
+
   unsigned long startTime = millis();
   bool timeoutError = false;
 
   while(!timeoutError && bus -> available() < expectedInputSize) {
-    if (millis() - startTime > 400) {
+    if (millis() - startTime > 50) {
       timeoutError = true;
     }
   }
 
-  BusResponse response;
-
   if (timeoutError) {
-    response.data = 0;
-    response.status = 1;
-
-    return response;
+    while(bus -> read() >= 0);
+    return {.data=0, .status=1};
   }
 
-  uint8_t inputSize = 0;
+  uint8_t i = 0;
+  int checkSumIndex = expectedInputSize - 1;
   
-  while(inputSize < expectedInputSize) {
+  while(i < expectedInputSize) {
     byte b = bus -> read();
-    responseBytes[inputSize] = b;
-    checkSum ^b;
-    inputSize++;
+    responseBytes[i] = b;
+    if (i < checkSumIndex) checkSum ^= b;
+    i++;
   }
 
-  response.data = responseBytes[3];
-  response.status = checkSum == responseBytes[5] ? 0 : 1;
+  float data = responseBytes[3];
+  int status = checkSum == responseBytes[checkSumIndex] ? 0 : 1;
 
-  return response;
+  return {.data=data, .status=status};
 }
 
 BusResponse KBusService::getEngineTemp() {
