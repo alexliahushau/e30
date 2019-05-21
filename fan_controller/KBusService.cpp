@@ -20,7 +20,7 @@ BusResponse KBusService::getData(byte request[]) {
   bool timeoutError = false;
 
   while(!timeoutError && bus -> available() < expectedInputSize) {
-    if (millis() - startTime > 50) {
+    if (millis() - startTime > 60) {
       timeoutError = true;
     }
   }

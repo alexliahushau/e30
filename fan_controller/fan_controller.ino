@@ -1,3 +1,4 @@
+#include <avr/wdt.h>
 #include "KBusService.h"
 
 #define FAN_FREQ_OUTPUT 9
@@ -7,8 +8,8 @@ const String TAB = "\t";
 float temp = 0;
 int speed = 0;
 int val = 19863; // 100Hz
-byte t_low = 85;
-byte t_high = 98;
+byte t_low = 89;
+byte t_high = 93;
 byte fan_load = 0;
 float duty = 0;
 
@@ -19,6 +20,12 @@ KBusService kbus;
 void setup () {
   Serial.begin(115200);
 
+  //Watchdog setup
+  Serial.println("Wait 5 sec..");
+  delay(5000); // Задержка, чтобы было время перепрошить устройство в случае bootloop
+  wdt_enable (WDTO_8S); // Для тестов не рекомендуется устанавливать значение менее 8 сек.
+  Serial.println("Watchdog enabled.");
+  
   pinMode (FAN_FREQ_OUTPUT, OUTPUT);
   
   TCCR1A = 0xE2 ;    // pins 9 and 10 in antiphase, mode 14 = fast 16 bit
@@ -30,12 +37,16 @@ void setup () {
 
 void loop () {
   getTempData();
+  
+  delay(10);  // Looks like ECU requires a delay between requests;
+  
   getSpeedData();
   fanController();
 
   log();
   
   delay(1000);
+  wdt_reset(); //reset watchdog
 }
 
 void fanController() {
@@ -99,8 +110,8 @@ void log() {
 }
 
 void debug(String msg) {
-  if (PROFILE == "prod" && errors == "") return;
-  String debug_str = String("temp: " + String(temp) + TAB + "speed: " + String(speed) + TAB + "fan_load: " + fan_load + TAB + msg + TAB + "ERRORS[" + errors + "]");
+  String err_part = (errors == "") ? "" : TAB + "ERRORS[" + errors + "]";
+  String debug_str = String("temp: " + String(temp) + TAB + "speed: " + String(speed) + TAB + "fan_load: " + fan_load + TAB + msg + err_part);
   Serial.println(debug_str);
   errors = "";
 }
